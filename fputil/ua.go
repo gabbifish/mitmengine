@@ -28,7 +28,7 @@ import (
 //      [<major>[.<minor>[.<patch>]]][-[<major>[.<minor>[.<patch>]]]]
 // <quirk>:
 //	same as in request.go
-// where items in enclosed in square brackets are optional,
+// where items in enclosed in square brackets are optional
 
 const anyVersion int = -1
 
