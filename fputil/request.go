@@ -742,7 +742,7 @@ func (a VersionSignature) Match(version Version) Match {
 func (a IntSignature) Match(list IntList) (Match, int) {
 	set := list.Set()
 	similarity := len(set.Inter(a.RequiredSet)) + len(set.Inter(a.OptionalSet))
-
+	
 	// check if the ordered list matches
 	if a.OrderedList != nil && !a.OrderedList.Contains(list) {
 		return MatchImpossible, similarity
