@@ -12,5 +12,4 @@ type Database interface {
 	Dump(io.Writer) error
 	GetByRequestFingerprint(fp.RequestFingerprint) []Record
 	GetByUAFingerprint(fp.UAFingerprint) []Record
-
 }

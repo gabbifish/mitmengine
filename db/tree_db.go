@@ -92,3 +92,9 @@ func (a *TreeDatabase) GetByUAFingerprint(uaFingerprint fp.UAFingerprint) []Reco
 	}
 	return candidateRecords
 }
+
+// GetByRequestFingerprint returns all records in the database matching the
+// request fingerprint.
+func (a *TreeDatabase) GetByRequestFingerprint(requestFingerprint fp.RequestFingerprint) []Record {
+	return []Record{}
+}
