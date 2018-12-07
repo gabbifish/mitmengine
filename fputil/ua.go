@@ -39,14 +39,24 @@ const (
 	uaVersionRangeSep string = "-"
 )
 
+// UAVersion represents a user agent browser or OS version.
+// We must make a typedef of this uasurfer struct local to this package in order to extend it (add additional functions)
+type UAVersion ua.Version
+
+// Make typedef of other used uasurfer structs for consistency.
+type UABrowserName ua.BrowserName
+type UAPlatform ua.Platform
+type UAOSName ua.OSName
+type UADeviceType ua.DeviceType
+
 // UAFingerprint is a fingerprint for a user agent
 type UAFingerprint struct {
-	BrowserName    int
+	BrowserName    UABrowserName
 	BrowserVersion UAVersion
-	OSPlatform     int
-	OSName         int
+	OSPlatform     UAPlatform
+	OSName         UAOSName
 	OSVersion      UAVersion
-	DeviceType     int
+	DeviceType     UADeviceType
 	Quirk          StringList
 }
 
@@ -65,43 +75,56 @@ func (a *UAFingerprint) Parse(s string) error {
 		return fmt.Errorf("bad ua field count '%s': exp %d, got %d", s, uaFieldCount, len(fields))
 	}
 	fieldIdx := 0
-	if a.BrowserName, err = strconv.Atoi(fields[fieldIdx]); err != nil {
+
+	if browserName, err := strconv.Atoi(fields[fieldIdx]); err != nil {
 		return err
+	} else {
+		a.BrowserName = UABrowserName(browserName)
 	}
 	fieldIdx++
+
 	if err = a.BrowserVersion.Parse(fields[fieldIdx]); err != nil {
 		return err
 	}
 	fieldIdx++
-	if a.OSPlatform, err = strconv.Atoi(fields[fieldIdx]); err != nil {
+
+	if platform, err := strconv.Atoi(fields[fieldIdx]); err != nil {
 		return err
+	} else {
+		a.OSPlatform = UAPlatform(platform)
 	}
 	fieldIdx++
-	if a.OSName, err = strconv.Atoi(fields[fieldIdx]); err != nil {
+
+	if osName, err := strconv.Atoi(fields[fieldIdx]); err != nil {
 		return err
+	} else {
+		a.OSName = UAOSName(osName)
 	}
 	fieldIdx++
+
 	if err = a.OSVersion.Parse(fields[fieldIdx]); err != nil {
 		return err
 	}
 	fieldIdx++
-	if a.DeviceType, err = strconv.Atoi(fields[fieldIdx]); err != nil {
+
+	if deviceType, err := strconv.Atoi(fields[fieldIdx]); err != nil {
 		return err
+	} else {
+		a.DeviceType = UADeviceType(deviceType)
 	}
 	fieldIdx++
+
 	if err = a.Quirk.Parse(fields[fieldIdx]); err != nil {
 		return err
 	}
+
 	return nil
 }
 
 // String returns a string representation of a fingerprint
 func (a UAFingerprint) String() string {
-	return strings.Join([]string{strconv.Itoa(a.BrowserName), a.BrowserVersion.String(), strconv.Itoa(a.OSPlatform), strconv.Itoa(a.OSName), a.OSVersion.String(), strconv.Itoa(a.DeviceType), a.Quirk.String()}, uaFieldSep)
+	return strings.Join([]string{strconv.Itoa(int(a.BrowserName)), a.BrowserVersion.String(), strconv.Itoa(int(a.OSPlatform)), strconv.Itoa(int(a.OSName)), a.OSVersion.String(), strconv.Itoa(int(a.DeviceType)), a.Quirk.String()}, uaFieldSep)
 }
-
-// UAVersion represents a user agent browser or OS version.
-type UAVersion ua.Version
 
 // Parse a user agent version from a string and return an error on failure.
 func (a *UAVersion) Parse(s string) error {
@@ -318,12 +341,12 @@ func (a UAVersionSignature) Merge(b UAVersionSignature) UAVersionSignature {
 
 // A UASignature represents a set of user agents
 type UASignature struct {
-	BrowserName    int
+	BrowserName    UABrowserName
 	BrowserVersion UAVersionSignature
-	OSPlatform     int
-	OSName         int
+	OSPlatform     UAPlatform
+	OSName         UAOSName
 	OSVersion      UAVersionSignature
-	DeviceType     int
+	DeviceType     UADeviceType
 	Quirk          StringSignature
 }
 
@@ -335,33 +358,49 @@ func (a *UASignature) Parse(s string) error {
 		return fmt.Errorf("bad ua field count '%s': exp %d, got %d", s, uaFieldCount, len(fields))
 	}
 	fieldIdx := 0
-	if a.BrowserName, err = strconv.Atoi(fields[fieldIdx]); err != nil {
+
+	if browserName, err := strconv.Atoi(fields[fieldIdx]); err != nil {
 		return err
+	} else {
+		a.BrowserName = UABrowserName(browserName)
 	}
 	fieldIdx++
+
 	if err = a.BrowserVersion.Parse(fields[fieldIdx]); err != nil {
 		return err
 	}
 	fieldIdx++
-	if a.OSPlatform, err = strconv.Atoi(fields[fieldIdx]); err != nil {
+
+	if platform, err := strconv.Atoi(fields[fieldIdx]); err != nil {
 		return err
+	} else {
+		a.OSPlatform = UAPlatform(platform)
 	}
 	fieldIdx++
-	if a.OSName, err = strconv.Atoi(fields[fieldIdx]); err != nil {
+
+	if osName, err := strconv.Atoi(fields[fieldIdx]); err != nil {
 		return err
+	} else {
+		a.OSName = UAOSName(osName)
 	}
 	fieldIdx++
+
 	if err = a.OSVersion.Parse(fields[fieldIdx]); err != nil {
 		return err
 	}
 	fieldIdx++
-	if a.DeviceType, err = strconv.Atoi(fields[fieldIdx]); err != nil {
+
+	if deviceType, err := strconv.Atoi(fields[fieldIdx]); err != nil {
 		return err
+	} else {
+		a.DeviceType = UADeviceType(deviceType)
 	}
 	fieldIdx++
+
 	if err = a.Quirk.Parse(fields[fieldIdx]); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -374,7 +413,7 @@ func NewUASignature(s string) (UASignature, error) {
 
 // String returns a string representation of a signature
 func (a UASignature) String() string {
-	return strings.Join([]string{strconv.Itoa(a.BrowserName), a.BrowserVersion.String(), strconv.Itoa(a.OSPlatform), strconv.Itoa(a.OSName), a.OSVersion.String(), strconv.Itoa(a.DeviceType), a.Quirk.String()}, uaFieldSep)
+	return strings.Join([]string{strconv.Itoa(int(a.BrowserName)), a.BrowserVersion.String(), strconv.Itoa(int(a.OSPlatform)), strconv.Itoa(int(a.OSName)), a.OSVersion.String(), strconv.Itoa(int(a.DeviceType)), a.Quirk.String()}, uaFieldSep)
 }
 
 // Merge user agent signatures a and b to match fingerprints from both.
@@ -415,19 +454,15 @@ func (a UASignature) Merge(b UASignature) UASignature {
 // is possible with an unlikely configuration, and MatchPossible otherwise.
 func (a UASignature) Match(fingerprint UAFingerprint) Match {
 	if a.BrowserName != 0 && a.BrowserName != fingerprint.BrowserName {
-		//fmt.Println("1", fingerprint)
 		return MatchImpossible
 	}
 	if a.OSPlatform != 0 && a.OSPlatform != fingerprint.OSPlatform {
-		//fmt.Println("2", fingerprint)
 		return MatchImpossible
 	}
 	if a.OSName != 0 && a.OSName != fingerprint.OSName {
-		//fmt.Println("3", fingerprint)
 		return MatchImpossible
 	}
 	if a.DeviceType != 0 && a.DeviceType != fingerprint.DeviceType {
-		//fmt.Println("4", fingerprint)
 		return MatchImpossible
 	}
 

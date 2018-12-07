@@ -54,7 +54,7 @@ func (a *Processor) Load(config *Config) error {
 		log.Printf("WARNING: loading file \"%s\" produced error \"%s\"", config.BrowserFileName, err)
 		browserFingerprints = ioutil.NopCloser(bytes.NewReader(nil))
 	}
-	if a.BrowserDatabase, err = db.NewDatabase(browserFingerprints); err != nil {
+	if a.BrowserDatabase, err = db.NewLinearDatabase(browserFingerprints); err != nil {
 		return err
 	}
 	browserFingerprints.Close()
@@ -64,7 +64,7 @@ func (a *Processor) Load(config *Config) error {
 		log.Printf("WARNING: loading file \"%s\" produced error \"%s\"", config.MitmFileName, err)
 		mitmFingerprints = ioutil.NopCloser(bytes.NewReader(nil))
 	}
-	if a.MitmDatabase, err = db.NewDatabase(mitmFingerprints); err != nil {
+	if a.MitmDatabase, err = db.NewLinearDatabase(mitmFingerprints); err != nil {
 		return err
 	}
 	mitmFingerprints.Close()
@@ -147,24 +147,23 @@ func (a *Processor) Check(uaFingerprint fp.UAFingerprint, rawUa string,
 	var r Report
 
 	// Find the browser record matching the user agent fingerprint
-	browserRecordIds := a.BrowserDatabase.GetByUAFingerprint(uaFingerprint)
-	if len(browserRecordIds) == 0 {
+	matchedBrowserRecords := a.BrowserDatabase.GetByUAFingerprint(uaFingerprint)
+	if len(matchedBrowserRecords) == 0 {
 		return Report{Error: ErrorUnknownUserAgent}
 	}
 	var browserRecord db.Record
 	var maxSimilarity int
 	match := false
 
-	for _, id := range browserRecordIds {
-		tempRecord := a.BrowserDatabase.RecordMap[id]
-		recordMatch, similarity := tempRecord.RequestSignature.Match(actualReqFin)
+	for _, record := range matchedBrowserRecords {
+		recordMatch, similarity := record.RequestSignature.Match(actualReqFin)
 		if recordMatch == fp.MatchPossible {
 			match = true
-			browserRecord = tempRecord
+			browserRecord = record
 			break
 		} else { // else, if similarity of unmatched record is greater than previously saved similarity, save record
 			if similarity > maxSimilarity {
-				browserRecord = tempRecord
+				browserRecord = record
 				maxSimilarity = similarity
 			}
 		}
@@ -256,11 +255,11 @@ func (a *Processor) Check(uaFingerprint fp.UAFingerprint, rawUa string,
 		if browserReqSig.IsPfs() && fp.GlobalCipherCheck.IsFirstPfs(actualReqFin.Cipher) {
 			r.LosesPfs = true
 		}
-		mitmRecordIds := a.MitmDatabase.GetByRequestFingerprint(actualReqFin)
-		if len(mitmRecordIds) == 0 {
+		mitmRecords := a.MitmDatabase.GetByRequestFingerprint(actualReqFin)
+		if len(mitmRecords) == 0 {
 			break
 		}
-		mitmRecord := a.MitmDatabase.RecordMap[mitmRecordIds[0]]
+		mitmRecord := mitmRecords[0]
 		r.ActualGrade = r.ActualGrade.Merge(mitmRecord.MitmInfo.Grade)
 		r.MatchedMitmName = mitmRecord.MitmInfo.NameList.String()
 		r.MatchedMitmType = mitmRecord.MitmInfo.Type

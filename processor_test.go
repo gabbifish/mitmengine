@@ -144,12 +144,12 @@ func _TestProcessorCheck(t *testing.T, config *mitmengine.Config) {
 		userAgent.Reset()
 		ua.ParseUserAgent(test.rawUa, &userAgent)
 		uaFingerprint := fp.UAFingerprint{
-			BrowserName:    int(userAgent.Browser.Name),
+			BrowserName:    fp.UABrowserName(userAgent.Browser.Name),
 			BrowserVersion: fp.UAVersion(userAgent.Browser.Version),
-			OSPlatform:     int(userAgent.OS.Platform),
-			OSName:         int(userAgent.OS.Name),
+			OSPlatform:     fp.UAPlatform(userAgent.OS.Platform),
+			OSName:         fp.UAOSName(userAgent.OS.Name),
 			OSVersion:      fp.UAVersion(userAgent.OS.Version),
-			DeviceType:     int(userAgent.DeviceType),
+			DeviceType:     fp.UADeviceType(userAgent.DeviceType),
 		}
 		fingerprint, err := fp.NewRequestFingerprint(test.fingerprint)
 		testutil.Ok(t, err)
@@ -162,9 +162,9 @@ func _TestProcessorCheck(t *testing.T, config *mitmengine.Config) {
 func _TestProcessorGetByUASignatureBrowser(t *testing.T, config *mitmengine.Config) {
 	file, err := mitmengine.LoadFile(config.BrowserFileName, config.Loader)
 	testutil.Ok(t, err)
-	a, err := db.NewDatabase(file)
+	a, err := db.NewLinearDatabase(file)
 	testutil.Ok(t, err)
-	for _, record := range a.RecordMap {
+	for _, record := range a.Records {
 		uaFingerprint, err := uaSigToFin(record.UASignature)
 		testutil.Ok(t, err)
 		actual := a.GetByUAFingerprint(uaFingerprint)
@@ -175,16 +175,16 @@ func _TestProcessorGetByUASignatureBrowser(t *testing.T, config *mitmengine.Conf
 func _TestProcessorGetByRequestSignatureMitm(t *testing.T, config *mitmengine.Config) {
 	file, err := mitmengine.LoadFile(config.MitmFileName, config.Loader)
 	testutil.Ok(t, err)
-	a, err := db.NewDatabase(file)
+	a, err := db.NewLinearDatabase(file)
 	testutil.Ok(t, err)
-	for _, record := range a.RecordMap {
+	for _, record := range a.Records {
 		requestFingerprint, err := reqSigToFin(record.RequestSignature)
 		testutil.Ok(t, err)
-		actualRecordIds := a.GetByRequestFingerprint(requestFingerprint)
-		testutil.Assert(t, len(actualRecordIds) > 0, fmt.Sprintf("no records found for '%s'", requestFingerprint))
+		actualRecords := a.GetByRequestFingerprint(requestFingerprint)
+		testutil.Assert(t, len(actualRecords) > 0, fmt.Sprintf("no records found for '%s'", requestFingerprint))
 		found := false
-		for _, id := range actualRecordIds {
-			if a.RecordMap[id].MitmInfo.Match(record.MitmInfo) != fp.MatchImpossible {
+		for _, actualRecord := range actualRecords {
+			if actualRecord.MitmInfo.Match(record.MitmInfo) != fp.MatchImpossible {
 				found = true
 			}
 		}
