@@ -25,8 +25,8 @@ var (
 // reports for a TLS client hello and corresponding HTTP user agent.
 type Processor struct {
 	FileNameMap     map[string]string
-	BrowserDatabase db.Database
-	MitmDatabase    db.Database
+	BrowserDatabase *db.LinearDatabase
+	MitmDatabase    *db.LinearDatabase
 	BadHeaderSet    fp.StringSet
 }
 

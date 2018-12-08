@@ -95,31 +95,31 @@ func (a *LinearDatabase) GetBy(getFunc func(Record) bool) []Record {
 }
 
 // DeleteBy deletes records for which rmFunc returns true.
-//func (a *LinearDatabase) DeleteBy(deleteFunc func(Record) bool) {
-//	records := a.GetBy(deleteFunc)
-//	for idx, record := range records {
-//	}
-//}
+func (a *LinearDatabase) DeleteBy(deleteFunc func(Record) bool) {
+	for idx, record := range a.Records {
+		if deleteFunc(record) {
+			a.Records = append(a.Records[:idx], a.Records[idx+1:]...)
+		}
+	}
+}
 
 // MergeBy merges records for which mergeFunc returns true.
-//func (a *LinearDatabase) MergeBy(mergeFunc func(Record, Record) bool) (int, int) {
-//	before := len(a.RecordMap)
-//	for id1 := range a.RecordMap {
-//		for id2 := range a.RecordMap {
-//			if id1 == id2 {
-//				continue
-//			}
-//			// retrieve record1 in each loop iteration in case it changed
-//			record1 := a.RecordMap[id1]
-//			record2 := a.RecordMap[id2]
-//			if mergeFunc(record1, record2) {
-//				a.RecordMap[id1] = record1.Merge(record2)
-//				// If elements are deleted from the map during the iteration, they will not be produced.
-//				// https://golang.org/ref/spec#For_statements
-//				delete(a.RecordMap, id2)
-//			}
-//		}
-//	}
-//	return before, len(a.RecordMap)
-//}
+func (a *LinearDatabase) MergeBy(mergeFunc func(Record, Record) bool) (int, int) {
+	before := len(a.Records)
+	for id1, record1 := range a.Records {
+		for id2, record2 := range a.Records {
+			if record1.String() == record2.String() {
+				continue
+			}
+			if mergeFunc(record1, record2) {
+				a.Records[id1] = record1.Merge(record2)
+				// If elements are deleted from the map during the iteration, they will not be produced.
+				// https://golang.org/ref/spec#For_statements
+				//delete(a.RecordMap, id2)
+				a.Records[id2] = Record{} // Treat the merged record as deleted.
+			}
+		}
+	}
+	return before, len(a.Records)
+}
 

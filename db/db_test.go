@@ -9,45 +9,49 @@ import (
 	"github.com/cloudflare/mitmengine/testutil"
 )
 
-func TestNewDatabase(t *testing.T) {
-	_, err := db.NewDatabase(bytes.NewReader(nil))
+func TestNewLinearDatabase(t *testing.T) {
+	_, err := db.NewLinearDatabase(bytes.NewReader(nil))
 	testutil.Ok(t, err)
 }
 
 func TestDatabaseLoad(t *testing.T) {
-	a, _ := db.NewDatabase(bytes.NewReader(nil))
+	a, _ := db.NewLinearDatabase(bytes.NewReader(nil))
 	err := a.Load(bytes.NewReader(nil))
 	testutil.Ok(t, err)
 }
 
 func TestDatabaseAdd(t *testing.T) {
-	a, _ := db.NewDatabase(bytes.NewReader(nil))
-	testutil.Equals(t, 0, len(a.RecordMap))
+	a, _ := db.NewLinearDatabase(bytes.NewReader(nil))
+	testutil.Equals(t, 0, len(a.Records))
 	a.Add(db.Record{})
-	testutil.Equals(t, 1, len(a.RecordMap))
+	testutil.Equals(t, 1, len(a.Records))
 	a.Add(db.Record{})
-	testutil.Equals(t, 2, len(a.RecordMap))
+	testutil.Equals(t, 2, len(a.Records))
 }
 
 func TestDatabaseClear(t *testing.T) {
-	a, _ := db.NewDatabase(bytes.NewReader(nil))
+	a, _ := db.NewLinearDatabase(bytes.NewReader(nil))
 	a.Add(db.Record{})
 	a.Clear()
-	testutil.Equals(t, 0, len(a.RecordMap))
+	testutil.Equals(t, 0, len(a.Records))
 	a.Add(db.Record{})
-	testutil.Equals(t, 1, len(a.RecordMap))
+	testutil.Equals(t, 1, len(a.Records))
 }
 
 func TestDatabaseGetByUAFingerprint(t *testing.T) {
 	var tests = []struct {
 		in  fp.UAFingerprint
-		out []uint64
+		out []db.Record
 	}{
-		{fp.UAFingerprint{}, []uint64(nil)},
-		{fp.UAFingerprint{BrowserName: 1}, []uint64{0}},
-		{fp.UAFingerprint{BrowserName: 2}, []uint64(nil)},
+		{fp.UAFingerprint{}, []db.Record(nil)},
+		{fp.UAFingerprint{BrowserName: 1}, []db.Record{{
+			UASignature: fp.UASignature{
+				BrowserName: 1,
+			},
+		}}},
+		{fp.UAFingerprint{BrowserName: 2}, []db.Record(nil)},
 	}
-	a, _ := db.NewDatabase(bytes.NewReader(nil))
+	a, _ := db.NewLinearDatabase(bytes.NewReader(nil))
 	a.Add(db.Record{UASignature: fp.UASignature{
 		BrowserName: 1,
 	}})
@@ -59,13 +63,21 @@ func TestDatabaseGetByUAFingerprint(t *testing.T) {
 func TestDatabaseGetByRequestFingerprint(t *testing.T) {
 	var tests = []struct {
 		in  fp.RequestFingerprint
-		out []uint64
+		out []db.Record
 	}{
-		{fp.RequestFingerprint{}, []uint64(nil)},
-		{fp.RequestFingerprint{Version: 1}, []uint64{0}},
-		{fp.RequestFingerprint{Version: 2}, []uint64(nil)},
+		{fp.RequestFingerprint{}, []db.Record(nil)},
+		{fp.RequestFingerprint{Version: 1}, []db.Record{{
+			RequestSignature: fp.RequestSignature{
+				Version: fp.VersionSignature{
+					Exp: 1,
+					Min: 1,
+					Max: 1,
+				},
+			},
+		}}},
+		{fp.RequestFingerprint{Version: 2}, []db.Record(nil)},
 	}
-	a, _ := db.NewDatabase(bytes.NewReader(nil))
+	a, _ := db.NewLinearDatabase(bytes.NewReader(nil))
 	a.Add(db.Record{RequestSignature: fp.RequestSignature{
 		Version: fp.VersionSignature{Exp: 1, Min: 1, Max: 1},
 	}})
